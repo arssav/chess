@@ -1,0 +1,2 @@
+build --repo_env=CC=clang --cxxopt='-std=c++17'
+test --repo_env=CC=clang --cxxopt='-std=c++17' --test_output=errors
