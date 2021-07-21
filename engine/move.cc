@@ -1,4 +1,4 @@
-#include "chess/move.h"
+#include "engine/move.h"
 
 #include <unordered_map>
 
@@ -19,6 +19,11 @@ char GetRank(int y) { return '0' + y + 1; }
 bool Move::operator==(const Move& other) const {
   return from_x_ == other.from_x_ && from_y_ == other.from_y_ &&
          to_x_ == other.to_x_ && to_y_ == other.to_y_;
+}
+
+bool Move::IsACapture() const {
+  return position_->GetPiece(from_x_, from_y_).Color() !=
+         position_->GetPiece(to_x_, to_y_).Color();
 }
 
 std::string Move::ToAlgebraicNotation() const {

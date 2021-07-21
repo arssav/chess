@@ -1,6 +1,9 @@
-#include "chess/position.h"
+#include "engine/position.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+using testing::UnorderedElementsAre;
 
 TEST(HasPiece, EmptyBoard) {
   Position position;
@@ -32,4 +35,20 @@ TEST(MakeMove, PieceIsMoved) {
   position.MakeMove({A, ONE}, {A, THREE});
   EXPECT_FALSE(position.HasPiece(A, ONE));
   EXPECT_EQ(position.GetPiece(A, THREE), Piece(Kind::ROOK, Color::WHITE));
+}
+
+TEST(FindPieces, FindsPiecesAsExpected) {
+  Position position = StartingPosition();
+  const std::vector<std::pair<int, int>> squares =
+      position.FindPieces(Piece(Kind::BISHOP, Color::BLACK));
+  EXPECT_THAT(squares,
+              UnorderedElementsAre(std::make_pair<int, int>(C, EIGHT),
+                                   std::make_pair<int, int>(F, EIGHT)));
+}
+
+TEST(FindPieces, FindsExpectedNumberOfPawns) {
+  Position position = StartingPosition();
+  const std::vector<std::pair<int, int>> squares =
+      position.FindPieces(Piece(Kind::PAWN, Color::WHITE));
+  EXPECT_EQ(squares.size(), 8);
 }

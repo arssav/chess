@@ -65,9 +65,21 @@ cc_library(
   srcs = ["notation_parser.cc"],
   deps = [
     ":move",
+    ":piece",
     ":position",
+    ":game_engine",
     "@com_google_absl//absl/status:status",
     "@com_google_absl//absl/status:statusor",
     "@com_google_absl//absl/strings:str_format",
+  ]
+)
+
+
+cc_test(
+  name = "notation_parser_test",
+  srcs = ["notation_parser_test.cc"],
+  deps = [
+    ":notation_parser",
+    "@com_google_googletest//:gtest_main",
   ]
 )

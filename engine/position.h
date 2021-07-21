@@ -1,9 +1,9 @@
-#ifndef CHESS_POSITION_H_
-#define CHESS_POSITION_H_
+#ifndef ENGINE_POSITION_H_
+#define ENGINE_POSITION_H_
 
 #include <vector>
 
-#include "chess/piece.h"
+#include "engine/piece.h"
 
 static constexpr int BOARD_SIZE = 8;
 
@@ -30,6 +30,9 @@ class Position {
   Piece GetPiece(int x, int y) const;
   void AddPiece(const Piece& piece, int x, int y);
   void RemovePiece(int x, int y);
+
+  std::vector<std::pair<int, int>> FindPieces(const Piece& piece) const;
+
   // Not passing a Move object to avoid circular dependencies, as Move stores a
   // pointer to its position.
   void MakeMove(const std::pair<int, int>& from, const std::pair<int, int>& to);
@@ -44,4 +47,4 @@ class Position {
 
 Position StartingPosition();
 
-#endif // CHESS_POSITION_H_
+#endif // ENGINE_POSITION_H_

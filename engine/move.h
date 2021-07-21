@@ -1,11 +1,11 @@
-#ifndef CHESS_MOVE_H_
-#define CHESS_MOVE_H_
+#ifndef ENGINE_MOVE_H_
+#define ENGINE_MOVE_H_
 
 #include <ostream>
 #include <string>
 #include <utility>
 
-#include "chess/position.h"
+#include "engine/position.h"
 
 // Represents a move of a piece, storing both source and destination
 // coordinates.
@@ -23,10 +23,10 @@ class Move {
 
   std::string ToAlgebraicNotation() const;
 
-  // friend std::ostream& operator<<(std::ostream& out, const Move& move);
-
   std::pair<int, int> From() const { return {from_x_, from_y_}; }
   std::pair<int, int> To() const { return {to_x_, to_y_}; }
+
+  bool IsACapture() const;
 
   friend class Position;
 
@@ -47,4 +47,4 @@ class Move {
 // which use this operator to print difering values.
 std::ostream& operator<<(std::ostream& out, const Move& move);
 
-#endif // CHESS_MOVE_H_
+#endif // ENGINE_MOVE_H_

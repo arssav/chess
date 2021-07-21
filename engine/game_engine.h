@@ -1,10 +1,10 @@
-#ifndef CHESS_GAME_ENGINE_H_
-#define CHESS_GAME_ENGINE_H_
+#ifndef ENGINE_GAME_ENGINE_H_
+#define ENGINE_GAME_ENGINE_H_
 
 #include <vector>
 
-#include "chess/move.h"
-#include "chess/position.h"
+#include "engine/move.h"
+#include "engine/position.h"
 
 bool MoveIsValid(const Position& position, const Move& move);
 
@@ -14,4 +14,4 @@ bool MoveIsValid(const Position& position, const Move& move);
 std::vector<Move> GenerateMovesForAPiece(const Position& position, int x,
                                          int y);
 
-#endif // CHESS_GAME_ENGINE_H_
+#endif // ENGINE_GAME_ENGINE_H_

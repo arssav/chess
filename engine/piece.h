@@ -1,5 +1,5 @@
-#ifndef CHESS_PIECE_H_
-#define CHESS_PIECE_H_
+#ifndef ENGINE_PIECE_H_
+#define ENGINE_PIECE_H_
 
 // Using scoped enums here to prevent implicit casting to int and name
 // collisions.
@@ -26,4 +26,4 @@ class Piece {
   bool is_black_;
 };
 
-#endif // CHESS_PIECE_H_
+#endif // ENGINE_PIECE_H_

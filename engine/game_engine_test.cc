@@ -1,4 +1,4 @@
-#include "chess/game_engine.h"
+#include "engine/game_engine.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

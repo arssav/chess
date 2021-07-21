@@ -1,6 +1,6 @@
-#include "chess/position.h"
+#include "engine/position.h"
 
-#include "chess/piece.h"
+#include "engine/piece.h"
 
 namespace {
 
@@ -38,6 +38,17 @@ void Position::AddPiece(const Piece& piece, int x, int y) {
 
 void Position::RemovePiece(int x, int y) {
   cells_[GetFlattenedIndex(x, y)] = Piece(Kind::NONE, Color::BLACK);
+}
+
+std::vector<std::pair<int, int>>
+Position::FindPieces(const Piece& piece) const {
+  std::vector<std::pair<int, int>> squares;
+  for (int i = 0; i < cells_.size(); ++i) {
+    if (cells_[i] == piece) {
+      squares.push_back({GetX(i), GetY(i)});
+    }
+  }
+  return squares;
 }
 
 void Position::MakeMove(const std::pair<int, int>& from,

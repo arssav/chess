@@ -1,8 +1,25 @@
-#include "chess/move.h"
+#include "engine/move.h"
 
-#include "chess/position.h"
+#include "engine/position.h"
 
 #include <gtest/gtest.h>
+
+TEST(IsACapture, IsNotACapture) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, TWO);
+  Move move(&position, E, TWO, E, THREE);
+
+  EXPECT_TRUE(move.IsACapture());
+}
+
+TEST(IsACapture, IsActuallyACapture) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, TWO);
+  position.AddPiece(Piece(Kind::PAWN, Color::BLACK), D, THREE);
+  Move move(&position, E, TWO, D, THREE);
+
+  EXPECT_TRUE(move.IsACapture());
+}
 
 TEST(ToAlgebraicNotation, NoPosition) {
   Move move(E, TWO, E, FOUR);

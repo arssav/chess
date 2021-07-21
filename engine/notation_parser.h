@@ -1,14 +1,14 @@
-#ifndef CHESS_NOTATION_PARSER_H_
-#define CHESS_NOTATION_PARSER_H_
+#ifndef ENGINE_NOTATION_PARSER_H_
+#define ENGINE_NOTATION_PARSER_H_
 
 #include "absl/status/statusor.h"
 #include <string>
 
-#include "chess/move.h"
-#include "chess/position.h"
+#include "engine/move.h"
+#include "engine/position.h"
 
 absl::StatusOr<Move>
-ParseAlgebraicNotation(const std::string& original_notation,
+ParseAlgebraicNotation(const std::string& original_notation, Color color,
                        const Position& position);
 
-#endif // CHESS_NOTATION_PARSER_H_
+#endif // ENGINE_NOTATION_PARSER_H_

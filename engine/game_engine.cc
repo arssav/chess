@@ -1,4 +1,4 @@
-#include "chess/game_engine.h"
+#include "engine/game_engine.h"
 
 #include <cmath>
 #include <unordered_map>
