@@ -39,16 +39,15 @@ TEST(MakeMove, PieceIsMoved) {
 
 TEST(FindPieces, FindsPiecesAsExpected) {
   Position position = StartingPosition();
-  const std::vector<std::pair<int, int>> squares =
+  const std::vector<Square> squares =
       position.FindPieces(Piece(Kind::BISHOP, Color::BLACK));
   EXPECT_THAT(squares,
-              UnorderedElementsAre(std::make_pair<int, int>(C, EIGHT),
-                                   std::make_pair<int, int>(F, EIGHT)));
+              UnorderedElementsAre(Square{C, EIGHT}, Square{F, EIGHT}));
 }
 
 TEST(FindPieces, FindsExpectedNumberOfPawns) {
   Position position = StartingPosition();
-  const std::vector<std::pair<int, int>> squares =
+  const std::vector<Square> squares =
       position.FindPieces(Piece(Kind::PAWN, Color::WHITE));
   EXPECT_EQ(squares.size(), 8);
 }

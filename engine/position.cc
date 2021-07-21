@@ -32,17 +32,29 @@ Piece Position::GetPiece(int x, int y) const {
   return cells_[GetFlattenedIndex(x, y)];
 }
 
+Piece Position::GetPiece(const Square& square) const {
+  return cells_[GetFlattenedIndex(square.file, square.rank)];
+}
+
 void Position::AddPiece(const Piece& piece, int x, int y) {
   cells_[GetFlattenedIndex(x, y)] = piece;
+}
+
+void Position::AddPiece(const Piece& piece, const Square& square) {
+  cells_[GetFlattenedIndex(square.file, square.rank)] = piece;
 }
 
 void Position::RemovePiece(int x, int y) {
   cells_[GetFlattenedIndex(x, y)] = Piece(Kind::NONE, Color::BLACK);
 }
 
-std::vector<std::pair<int, int>>
-Position::FindPieces(const Piece& piece) const {
-  std::vector<std::pair<int, int>> squares;
+void Position::RemovePiece(const Square& square) {
+  cells_[GetFlattenedIndex(square.file, square.rank)] =
+      Piece(Kind::NONE, Color::BLACK);
+}
+
+std::vector<Square> Position::FindPieces(const Piece& piece) const {
+  std::vector<Square> squares;
   for (int i = 0; i < cells_.size(); ++i) {
     if (cells_[i] == piece) {
       squares.push_back({GetX(i), GetY(i)});
@@ -51,11 +63,10 @@ Position::FindPieces(const Piece& piece) const {
   return squares;
 }
 
-void Position::MakeMove(const std::pair<int, int>& from,
-                        const std::pair<int, int>& to) {
+void Position::MakeMove(const Square& from, const Square& to) {
   // TODO: Implement en passant and castling.
-  AddPiece(GetPiece(from.first, from.second), to.first, to.second);
-  RemovePiece(from.first, from.second);
+  AddPiece(GetPiece(from), to);
+  RemovePiece(from);
 }
 
 Position StartingPosition() {

@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "engine/base.h"
 #include "engine/piece.h"
 
 static constexpr int BOARD_SIZE = 8;
@@ -28,14 +29,17 @@ class Position {
 
   bool HasPiece(int x, int y) const;
   Piece GetPiece(int x, int y) const;
+  Piece GetPiece(const Square& square) const;
   void AddPiece(const Piece& piece, int x, int y);
+  void AddPiece(const Piece& piece, const Square& square);
   void RemovePiece(int x, int y);
+  void RemovePiece(const Square& square);
 
-  std::vector<std::pair<int, int>> FindPieces(const Piece& piece) const;
+  std::vector<Square> FindPieces(const Piece& piece) const;
 
   // Not passing a Move object to avoid circular dependencies, as Move stores a
   // pointer to its position.
-  void MakeMove(const std::pair<int, int>& from, const std::pair<int, int>& to);
+  void MakeMove(const Square& from, const Square& to);
 
  private:
   // Stores all the board cells state, flattened into a vector.

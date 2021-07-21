@@ -1,4 +1,9 @@
 cc_library(
+  name = "base",
+  srcs = ["base.h"],
+)
+
+cc_library(
   name = "piece",
   srcs = ["piece.h"],
 )
@@ -8,6 +13,7 @@ cc_library(
   hdrs = ["position.h"],
   srcs = ["position.cc"],
   deps = [
+    ":base",
     ":piece",
   ],
 )
@@ -26,6 +32,7 @@ cc_library(
   hdrs = ["move.h"],
   srcs = ["move.cc"],
   deps = [
+    ":base",
     ":position",
     "@com_google_absl//absl/strings:str_format",
   ]

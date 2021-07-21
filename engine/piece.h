@@ -1,10 +1,7 @@
 #ifndef ENGINE_PIECE_H_
 #define ENGINE_PIECE_H_
 
-// Using scoped enums here to prevent implicit casting to int and name
-// collisions.
-enum class Color : char { BLACK, WHITE };
-enum class Kind : char { NONE, PAWN, KING, QUEEN, BISHOP, KNIGHT, ROOK };
+#include "engine/base.h"
 
 // Represents a figure on a board.
 class Piece {

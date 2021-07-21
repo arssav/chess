@@ -250,8 +250,8 @@ std::vector<Move> GenerateMovesForAPiece(const Position& position, int x,
 }
 
 bool MoveIsValid(const Position& position, const Move& move) {
-  for (const Move& possible_move : GenerateMovesForAPiece(
-           position, move.From().first, move.From().second)) {
+  for (const Move& possible_move :
+       GenerateMovesForAPiece(position, move.From().file, move.From().rank)) {
     if (move.To() == possible_move.To()) {
       return true;
     }

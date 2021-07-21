@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "engine/base.h"
 #include "engine/game_engine.h"
 #include "engine/move.h"
 #include "engine/piece.h"
@@ -73,7 +74,7 @@ bool TryParsingCapture(std::string* notation) {
   return false;
 }
 
-absl::StatusOr<std::pair<int, int>> TryParsingSquare(std::string* notation) {
+absl::StatusOr<Square> TryParsingSquare(std::string* notation) {
   if (notation == nullptr) {
     return absl::InvalidArgumentError(
         "cannot parse square from empty notation");
@@ -90,7 +91,7 @@ absl::StatusOr<std::pair<int, int>> TryParsingSquare(std::string* notation) {
   absl::StatusOr<int> rank_or = TryParsingRank(notation_copy.get());
   if (file_or.ok() && rank_or.ok()) {
     *notation = notation->substr(2);
-    return std::make_pair(*file_or, *rank_or);
+    return Square(*file_or, *rank_or);
   }
   return absl::InvalidArgumentError(
       absl::StrFormat("cannot parse square from notation: \"%s\"", *notation));
@@ -108,7 +109,7 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
   }
 
   Kind kind = *kind_or;
-  const std::vector<std::pair<int, int>> possible_initial_squares =
+  const std::vector<Square> possible_initial_squares =
       position.FindPieces(Piece(kind, color));
   if (possible_initial_squares.empty()) {
     // TODO: print kind and color nicely.
@@ -122,10 +123,10 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
 
   bool is_a_capture = TryParsingCapture(&notation);
 
-  absl::StatusOr<std::pair<int, int>> square_or = TryParsingSquare(&notation);
+  absl::StatusOr<Square> square_or = TryParsingSquare(&notation);
   if (!square_or.ok()) {
     if (file_or.ok() && rank_or.ok()) {
-      square_or = std::make_pair(*file_or, *rank_or);
+      square_or = Square(*file_or, *rank_or);
       file_or = absl::UnavailableError("File uninitialized");
       rank_or = absl::UnavailableError("Rank uninitialized");
     } else {
@@ -134,14 +135,13 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
   }
 
   std::vector<Move> possible_moves;
-  for (const std::pair<int, int>& initial_square : possible_initial_squares) {
-    Move move = Move(&position, initial_square.first, initial_square.second,
-                     square_or->first, square_or->second);
+  for (const Square& initial_square : possible_initial_squares) {
+    Move move = Move(&position, initial_square, *square_or);
     if (MoveIsValid(position, move)) {
-      if (file_or.ok() && move.From().first != *file_or) {
+      if (file_or.ok() && move.From().file != *file_or) {
         continue;
       }
-      if (rank_or.ok() && move.From().second != *rank_or) {
+      if (rank_or.ok() && move.From().rank != *rank_or) {
         continue;
       }
       possible_moves.push_back(move);
