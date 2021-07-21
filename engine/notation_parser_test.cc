@@ -23,6 +23,15 @@ TEST(ParseAlgebraicNotation, MoveWithExplicitKindIsParsed) {
   EXPECT_EQ(*move, Move(&position, C, ONE, F, FOUR));
 }
 
+TEST(ParseAlgebraicNotation, UnparsedTextGivesError) {
+  Position position;
+  position.AddPiece(Piece(Kind::BISHOP, Color::WHITE), C, ONE);
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("Bf4extra", Color::WHITE, position);
+
+  EXPECT_FALSE(move.ok());
+}
+
 TEST(ParseAlgebraicNotation, MoveWithWrongKindGivesError) {
   Position position;
   position.AddPiece(Piece(Kind::BISHOP, Color::WHITE), C, ONE);
@@ -50,4 +59,51 @@ TEST(ParseAlgebraicNotation, CaptureIsParsed) {
 
   EXPECT_TRUE(move.ok());
   EXPECT_EQ(*move, Move(&position, D, FOUR, D, FIVE));
+}
+
+TEST(ParseAlgebraicNotation, DisambiguationByFileIsParsed) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, FOUR);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), C, FOUR);
+  position.AddPiece(Piece(Kind::PAWN, Color::BLACK), D, FIVE);
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("exd5", Color::WHITE, position);
+
+  EXPECT_TRUE(move.ok());
+  EXPECT_EQ(*move, Move(&position, E, FOUR, D, FIVE));
+}
+
+TEST(ParseAlgebraicNotation, DisambiguationByRankIsParsed) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, FOUR);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), E, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), E, SIX);
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("R1xe4", Color::BLACK, position);
+
+  EXPECT_TRUE(move.ok());
+  EXPECT_EQ(*move, Move(&position, E, ONE, E, FOUR));
+}
+
+TEST(ParseAlgebraicNotation, DisambiguationByRankAndFileIsParsed) {
+  Position position;
+  position.AddPiece(Piece(Kind::QUEEN, Color::WHITE), A, ONE);
+  position.AddPiece(Piece(Kind::QUEEN, Color::WHITE), C, ONE);
+  position.AddPiece(Piece(Kind::QUEEN, Color::WHITE), A, THREE);
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("Qa1c3", Color::WHITE, position);
+
+  EXPECT_TRUE(move.ok());
+  EXPECT_EQ(*move, Move(&position, A, ONE, C, THREE));
+}
+
+TEST(ParseAlgebraicNotation, NoDisambiguationWhenItsNeededCausesError) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, FOUR);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), E, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), E, SIX);
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("Rxe4", Color::BLACK, position);
+
+  EXPECT_FALSE(move.ok());
 }

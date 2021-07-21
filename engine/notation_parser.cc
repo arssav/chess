@@ -6,8 +6,8 @@
 #include <unordered_map>
 
 #include "engine/game_engine.h"
-#include "engine/piece.h"
 #include "engine/move.h"
+#include "engine/piece.h"
 
 namespace {
 
@@ -116,11 +116,21 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
         absl::StrFormat("No pieces found: %d, %d", kind, color));
   }
 
+  // These might either disambiguate source square or denote destination square.
+  absl::StatusOr<int> file_or = TryParsingFile(&notation);
+  absl::StatusOr<int> rank_or = TryParsingRank(&notation);
+
   bool is_a_capture = TryParsingCapture(&notation);
 
   absl::StatusOr<std::pair<int, int>> square_or = TryParsingSquare(&notation);
   if (!square_or.ok()) {
-    return square_or.status();
+    if (file_or.ok() && rank_or.ok()) {
+      square_or = std::make_pair(*file_or, *rank_or);
+      file_or = absl::UnavailableError("File uninitialized");
+      rank_or = absl::UnavailableError("Rank uninitialized");
+    } else {
+      return square_or.status();
+    }
   }
 
   std::vector<Move> possible_moves;
@@ -128,6 +138,12 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
     Move move = Move(&position, initial_square.first, initial_square.second,
                      square_or->first, square_or->second);
     if (MoveIsValid(position, move)) {
+      if (file_or.ok() && move.From().first != *file_or) {
+        continue;
+      }
+      if (rank_or.ok() && move.From().second != *rank_or) {
+        continue;
+      }
       possible_moves.push_back(move);
     }
   }
@@ -146,6 +162,12 @@ ParseAlgebraicNotation(const std::string& original_notation, Color color,
     return absl::InvalidArgumentError(absl::StrFormat(
         "Notation \"%s\" is a capture, but parsed move \"%s\" is not",
         original_notation, possible_moves[0].ToAlgebraicNotation()));
+  }
+
+  if (!notation.empty()) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Unparsed notation left: \"%s\" from parsing \"%s\"",
+                        notation, original_notation));
   }
 
   return possible_moves[0];
