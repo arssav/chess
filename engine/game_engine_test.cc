@@ -99,11 +99,11 @@ TEST(GenerateMovesForAPiece, BishopMoveDirectionsAreInitializedOnce) {
   const std::vector<Move> moves = GenerateMovesForAPiece(position, A, ONE);
 
   // Checking that the move directions singleton vector is actually only
-  // initialized once. If it isn't, moves in the same direction would be added
-  // twice on a second call.
+  // initialized once. If it isn't, moves in the same direction would be
+  // added twice on a second call.
   // Note that this is a test anti-pattern: we're testing the internals of a
-  // function as opposed to its interface here. However, it's better to catch
-  // any possible errors early.
+  // function as opposed to its interface here. However, it's better to
+  // catch any possible errors early.
   EXPECT_EQ(moves.size(), 7);
   EXPECT_EQ(moves.size(), 7);
 }
@@ -244,4 +244,196 @@ TEST(GenerateMovesForAPiece, KnightCannotTakeSameColorPieces) {
   const std::vector<Move> moves = GenerateMovesForAPiece(position, A, ONE);
 
   EXPECT_THAT(moves, UnorderedElementsAre());
+}
+
+// King tests.
+
+TEST(GenerateMovesForAPiece, KingInAMiddleOfAnEmptyBoard) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), C, SIX);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, C, SIX);
+
+  EXPECT_EQ(moves.size(), 8);
+}
+
+TEST(GenerateMovesForAPiece, KingOnAStartingPosition) {
+  Position position = StartingPosition();
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre());
+}
+
+TEST(GenerateMovesForAPiece, KingCannotMoveAdjacentToEnemyKing) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), A, ONE);
+  position.AddPiece(Piece(Kind::KING, Color::WHITE), C, TWO);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, A, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, A, ONE, A, TWO)));
+}
+
+TEST(GenerateMovesForAPiece, KingCanTakePieces) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), A, ONE);
+  position.AddPiece(Piece(Kind::QUEEN, Color::WHITE), B, TWO);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, A, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, A, ONE, B, TWO)));
+}
+
+TEST(GenerateMovesForAPiece, KingCanCastle) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::WHITE), E, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, ONE);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, ONE, E, TWO),
+                                          Move(&position, E, ONE, D, ONE),
+                                          Move(&position, E, ONE, F, ONE),
+                                          Move(&position, E, ONE, D, TWO),
+                                          Move(&position, E, ONE, F, TWO),
+                                          Move(&position, E, ONE, G, ONE)));
+}
+
+TEST(GenerateMovesForAPiece, KingCannotCastleAfterMoving) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::WHITE), E, ONE);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), D, TWO);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, TWO);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), F, TWO);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, ONE);
+  position.MakeMove({E, ONE}, {D, ONE});
+  position.MakeMove({D, ONE}, {E, ONE});
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, ONE, D, ONE),
+                                          Move(&position, E, ONE, F, ONE)));
+}
+
+TEST(GenerateMovesForAPiece, KingCannotCastleAfterRookHasMoved) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::WHITE), E, ONE);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), D, TWO);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), E, TWO);
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), F, TWO);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), A, ONE);
+  position.MakeMove({A, ONE}, {B, ONE});
+  position.MakeMove({B, ONE}, {A, ONE});
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, ONE);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, ONE, D, ONE),
+                                          Move(&position, E, ONE, F, ONE)));
+}
+
+TEST(GenerateMovesForAPiece, KingCannotCastleWhenUnderCheck) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), H, EIGHT);
+  position.AddPiece(Piece(Kind::QUEEN, Color::WHITE), E, FOUR);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, EIGHT);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, EIGHT, D, EIGHT),
+                                          Move(&position, E, EIGHT, F, EIGHT),
+                                          Move(&position, E, EIGHT, D, SEVEN),
+                                          Move(&position, E, EIGHT, F, SEVEN)));
+}
+
+TEST(GenerateMovesForAPiece,
+     KingCannotMoveThroughAttackedSquaresWhileCastling) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), A, EIGHT);
+  position.AddPiece(Piece(Kind::BISHOP, Color::WHITE), H, FOUR);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, SEVEN);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, EIGHT);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, EIGHT, F, EIGHT)));
+
+  // Protect castling route
+  position.AddPiece(Piece(Kind::PAWN, Color::BLACK), F, SIX);
+  const std::vector<Move> new_moves =
+      GenerateMovesForAPiece(position, E, EIGHT);
+  EXPECT_THAT(new_moves,
+              UnorderedElementsAre(Move(&position, E, EIGHT, F, EIGHT),
+                                   Move(&position, E, EIGHT, D, EIGHT),
+                                   Move(&position, E, EIGHT, C, EIGHT)));
+}
+
+TEST(GenerateMovesForAPiece, KingCannotCastleToAttackedSquare) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), A, EIGHT);
+  position.AddPiece(Piece(Kind::BISHOP, Color::WHITE), H, THREE);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, SEVEN);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, EIGHT);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, EIGHT, D, EIGHT),
+                                          Move(&position, E, EIGHT, F, EIGHT)));
+
+  // Protect castling destination
+  position.AddPiece(Piece(Kind::PAWN, Color::BLACK), E, SIX);
+  const std::vector<Move> new_moves =
+      GenerateMovesForAPiece(position, E, EIGHT);
+  EXPECT_THAT(new_moves,
+              UnorderedElementsAre(Move(&position, E, EIGHT, D, EIGHT),
+                                   Move(&position, E, EIGHT, F, EIGHT),
+                                   Move(&position, E, EIGHT, C, EIGHT)));
+}
+
+TEST(GenerateMovesForAPiece, RookCanMoveThroughAttackedSquaresWhileCastling) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), A, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), B, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, SEVEN);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, EIGHT);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, EIGHT, F, EIGHT),
+                                          Move(&position, E, EIGHT, D, EIGHT),
+                                          Move(&position, E, EIGHT, C, EIGHT)));
+}
+
+TEST(GenerateMovesForAPiece, RookCanCastleWhenAttacked) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), A, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), A, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), H, SEVEN);
+  const std::vector<Move> moves = GenerateMovesForAPiece(position, E, EIGHT);
+
+  EXPECT_THAT(moves, UnorderedElementsAre(Move(&position, E, EIGHT, F, EIGHT),
+                                          Move(&position, E, EIGHT, D, EIGHT),
+                                          Move(&position, E, EIGHT, C, EIGHT)));
+}
+
+// GetSquaresUnderAttack()
+
+TEST(GetSquaresUnderAttack, PawnAttacksEmptySquares) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::WHITE), B, THREE);
+  const std::unordered_set<Square> squares =
+      GetSquaresUnderAttack(position, Color::WHITE);
+
+  EXPECT_THAT(squares, UnorderedElementsAre(Square{A, FOUR}, Square{C, FOUR}));
+}
+
+TEST(GetSquaresUnderAttack, PawnAttacksEnemyOccupiedSquares) {
+  Position position;
+  position.AddPiece(Piece(Kind::PAWN, Color::BLACK), B, TWO);
+  position.AddPiece(Piece(Kind::KNIGHT, Color::WHITE), C, ONE);
+  position.AddPiece(Piece(Kind::BISHOP, Color::BLACK), A, ONE);
+  const std::unordered_set<Square> squares =
+      GetSquaresUnderAttack(position, Color::BLACK);
+
+  EXPECT_THAT(squares, UnorderedElementsAre(Square{C, ONE}));
+}
+
+TEST(GetSquaresUnderAttack, KnightInTheMiddleAttacksEightSquares) {
+  Position position;
+  position.AddPiece(Piece(Kind::KNIGHT, Color::WHITE), E, FOUR);
+  position.AddPiece(Piece(Kind::KNIGHT, Color::BLACK), G, FIVE);
+  const std::unordered_set<Square> squares =
+      GetSquaresUnderAttack(position, Color::WHITE);
+
+  EXPECT_EQ(squares.size(), 8);
 }

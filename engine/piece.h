@@ -18,6 +18,8 @@ class Piece {
     return kind_ == rhs.kind_ && is_black_ == rhs.is_black_;
   }
 
+  bool operator!=(const Piece& rhs) const { return !(*this == rhs); }
+
  private:
   enum ::Kind kind_;
   bool is_black_;

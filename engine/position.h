@@ -6,8 +6,6 @@
 #include "engine/base.h"
 #include "engine/piece.h"
 
-static constexpr int BOARD_SIZE = 8;
-
 enum File { A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7 };
 
 // Represents square horizontal, added for readability reasons, as chess
@@ -28,12 +26,19 @@ class Position {
   Position();
 
   bool HasPiece(int x, int y) const;
+  bool HasPiece(const Square& square) const;
   Piece GetPiece(int x, int y) const;
   Piece GetPiece(const Square& square) const;
   void AddPiece(const Piece& piece, int x, int y);
   void AddPiece(const Piece& piece, const Square& square);
   void RemovePiece(int x, int y);
   void RemovePiece(const Square& square);
+
+  // Returns false if the King of corresponding color has moved, or if the
+  // correesponding rook has moved. Doesn't check if king or any of the squares
+  // on the castling routes is under check.
+  bool ShortCastlingPossible(Color color) const;
+  bool LongCastlingPossible(Color color) const;
 
   std::vector<Square> FindPieces(const Piece& piece) const;
 
@@ -47,6 +52,10 @@ class Position {
   //   * Whether the castling is possible (kings and rooks haven't moved)
   //   * Whether a pawn moved two squares last turn (for en passant)
   std::vector<Piece> cells_;
+
+  // A single byte of data storing all the necessary bits required to get
+  // whether each one of 4 castling kinds is possible.
+  char castling_bits_ = 0;
 };
 
 Position StartingPosition();

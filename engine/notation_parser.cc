@@ -102,6 +102,14 @@ absl::StatusOr<Square> TryParsingSquare(std::string* notation) {
 absl::StatusOr<Move>
 ParseAlgebraicNotation(const std::string& original_notation, Color color,
                        const Position& position) {
+  // Castling.
+  const int initial_rank = (color == Color::WHITE ? ONE : EIGHT);
+  if (original_notation == "0-0") {
+    return Move(&position, Square{E, initial_rank}, Square{G, initial_rank});
+  } else if (original_notation == "0-0-0") {
+    return Move(&position, Square{E, initial_rank}, Square{C, initial_rank});
+  }
+
   std::string notation = original_notation;
   absl::StatusOr<Kind> kind_or = TryParsingKind(&notation);
   if (!kind_or.ok()) {

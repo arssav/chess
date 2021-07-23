@@ -114,13 +114,18 @@ std::pair<int, int> FindKingOfColor(const Position& position, Color color) {
   return std::make_pair(-1, -1);
 }
 
-std::vector<Move> GenerateMovesForAKing(const Position& position, int x,
-                                        int y) {
+template <typename T, typename Key>
+bool Contains(const T& set_or_map, const Key& key) {
+  return set_or_map.find(key) != set_or_map.end();
+}
+
+std::vector<Move> GenerateNonCastlingMovesForAKing(
+    const Position& position, int x, int y,
+    const std::unordered_set<Square>& squares_under_attack) {
   std::vector<Move> moves;
   const Color king_color = position.GetPiece(x, y).Color();
   const std::pair<int, int> enemy_king_position = FindKingOfColor(
       position, king_color == Color::BLACK ? Color::WHITE : Color::BLACK);
-  // Regular moves.
   for (int dx = -1; dx <= 1; ++dx) {
     for (int dy = -1; dy <= 1; ++dy) {
       if (dx == 0 && dy == 0) {
@@ -133,6 +138,9 @@ std::vector<Move> GenerateMovesForAKing(const Position& position, int x,
           position.GetPiece(x + dx, y + dy).Color() == king_color) {
         continue;
       }
+      if (Contains(squares_under_attack, Square{x + dx, y + dy})) {
+        continue;
+      }
       if (std::abs(x + dx - enemy_king_position.first) <= 1 &&
           std::abs(y + dy - enemy_king_position.second) <= 1) {
         continue;
@@ -140,13 +148,69 @@ std::vector<Move> GenerateMovesForAKing(const Position& position, int x,
       moves.push_back(Move(&position, x, y, x + dx, y + dy));
     }
   }
+  return moves;
+}
+
+std::vector<Move> GenerateMovesForAKing(const Position& position, int x,
+                                        int y) {
+  const Color king_color = position.GetPiece(x, y).Color();
+  const std::unordered_set<Square> squares_under_attack =
+      GetSquaresUnderAttack(position, OppositeColor(king_color));
+  std::vector<Move> moves =
+      GenerateNonCastlingMovesForAKing(position, x, y, squares_under_attack);
 
   // Castling.
-  // TODO: Implement castling:
-  //  * King hasn't moved
-  //  * Rook hasn't moved
-  //  * King is not in check
-  //  * King is not moving through attacked squares
+  const int starting_rank = (king_color == Color::WHITE ? ONE : EIGHT);
+  if (x != E || y != starting_rank) {
+    return moves;
+  }
+
+  if (Contains(squares_under_attack, Square{x, y})) {
+    return moves;
+  }
+  // Short castling
+  int route_x = x;
+  if (position.ShortCastlingPossible(king_color)) {
+    do {
+      if (!position.HasPiece(H, starting_rank) ||
+          (position.GetPiece(H, starting_rank) !=
+           Piece(Kind::ROOK, king_color))) {
+        break;
+      }
+      ++route_x;
+      if (position.HasPiece(Square{route_x, y})) {
+        break;
+      }
+      if (Contains(squares_under_attack, Square{route_x, y})) {
+        break;
+      }
+      if (route_x == G) {
+        moves.push_back(Move(&position, x, y, route_x, y));
+      }
+    } while (route_x < G);
+  }
+  // Long castling
+  if (position.LongCastlingPossible(king_color) &&
+      !position.HasPiece(Square{G, y})) {
+    route_x = x;
+    do {
+      if (!position.HasPiece(A, starting_rank) ||
+          (position.GetPiece(A, starting_rank) !=
+           Piece(Kind::ROOK, king_color))) {
+        break;
+      }
+      --route_x;
+      if (position.HasPiece(Square{route_x, y})) {
+        break;
+      }
+      if (Contains(squares_under_attack, Square{route_x, y})) {
+        break;
+      }
+      if (route_x == C) {
+        moves.push_back(Move(&position, x, y, route_x, y));
+      }
+    } while (route_x > C);
+  }
 
   return moves;
 }
@@ -258,4 +322,42 @@ bool MoveIsValid(const Position& position, const Move& move) {
   }
 
   return false;
+}
+
+std::unordered_set<Square> GetSquaresUnderAttack(const Position& position,
+                                                 Color attacking_color) {
+  std::unordered_set<Square> squares_under_attack;
+  for (int x = 0; x < BOARD_SIZE; ++x) {
+    for (int y = 0; y < BOARD_SIZE; ++y) {
+      if (position.HasPiece(x, y) &&
+          position.GetPiece(x, y).Color() == attacking_color) {
+        const Piece& piece = position.GetPiece(x, y);
+        if (piece.Kind() == Kind::PAWN) {
+          int to_x = x - 1;
+          int to_y = y + (piece.Color() == Color::WHITE ? 1 : -1);
+          if (IsValidCoordinate(to_x, to_y) &&
+              (!position.HasPiece(to_x, to_y) ||
+               position.GetPiece(to_x, to_y).Color() != piece.Color())) {
+            squares_under_attack.insert(Square{to_x, to_y});
+          }
+          to_x = x + 1;
+          if (IsValidCoordinate(to_x, to_y) &&
+              (!position.HasPiece(to_x, to_y) ||
+               position.GetPiece(to_x, to_y).Color() != piece.Color())) {
+            squares_under_attack.insert(Square{to_x, to_y});
+          }
+        } else if (piece.Kind() == Kind::KING) {
+          for (const Move& move :
+               GenerateNonCastlingMovesForAKing(position, x, y, {})) {
+            squares_under_attack.insert(move.To());
+          }
+        } else {
+          for (const Move& move : GenerateMovesForAPiece(position, x, y)) {
+            squares_under_attack.insert(move.To());
+          }
+        }
+      }
+    }
+  }
+  return squares_under_attack;
 }

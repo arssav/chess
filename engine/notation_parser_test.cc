@@ -107,3 +107,27 @@ TEST(ParseAlgebraicNotation, NoDisambiguationWhenItsNeededCausesError) {
 
   EXPECT_FALSE(move.ok());
 }
+
+TEST(ParseAlgebraicNotation, ShortCastlingIsParsed) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::BLACK), E, EIGHT);
+  position.AddPiece(Piece(Kind::ROOK, Color::BLACK), H, EIGHT);
+
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("0-0", Color::BLACK, position);
+
+  EXPECT_TRUE(move.ok());
+  EXPECT_EQ(*move, Move(&position, {E, EIGHT}, {G, EIGHT}));
+}
+
+TEST(ParseAlgebraicNotation, LongCastlingIsParsed) {
+  Position position;
+  position.AddPiece(Piece(Kind::KING, Color::WHITE), E, ONE);
+  position.AddPiece(Piece(Kind::ROOK, Color::WHITE), A, ONE);
+
+  absl::StatusOr<Move> move =
+      ParseAlgebraicNotation("0-0-0", Color::WHITE, position);
+
+  EXPECT_TRUE(move.ok());
+  EXPECT_EQ(*move, Move(&position, {E, ONE}, {C, ONE}));
+}
