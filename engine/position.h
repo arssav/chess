@@ -1,6 +1,7 @@
 #ifndef ENGINE_POSITION_H_
 #define ENGINE_POSITION_H_
 
+#include <string>
 #include <vector>
 
 #include "engine/base.h"
@@ -45,6 +46,8 @@ class Position {
   // Not passing a Move object to avoid circular dependencies, as Move stores a
   // pointer to its position.
   void MakeMove(const Square& from, const Square& to);
+
+  std::string ToString() const;
 
  private:
   // Stores all the board cells state, flattened into a vector.

@@ -1,11 +1,30 @@
+
+
 cc_library(
   name = "base",
-  srcs = ["base.h"],
+  hdrs = ["base.h"],
+  srcs = ["base.cc"],
 )
 
 cc_library(
   name = "piece",
-  srcs = ["piece.h"],
+  hdrs = ["piece.h"],
+  srcs = ["piece.cc"],
+  deps = [
+    ":base",
+  ]
+)
+
+cc_library(
+  name = "game",
+  hdrs = ["game.h"],
+  srcs = ["game.cc"],
+  visibility = ["//visibility:public"],
+  deps = [
+    ":base",
+    ":move",
+    ":position"
+  ]
 )
 
 cc_library(
@@ -31,6 +50,7 @@ cc_library(
   name = "move",
   hdrs = ["move.h"],
   srcs = ["move.cc"],
+  visibility = ["//visibility:public"],
   deps = [
     ":base",
     ":position",
@@ -70,6 +90,7 @@ cc_library(
   name = "notation_parser",
   hdrs = ["notation_parser.h"],
   srcs = ["notation_parser.cc"],
+  visibility = ["//visibility:public"],
   deps = [
     ":move",
     ":piece",

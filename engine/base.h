@@ -12,9 +12,7 @@ static constexpr int BOARD_SIZE_LOG = 3;
 enum class Color : char { BLACK, WHITE };
 enum class Kind : char { NONE, PAWN, KING, QUEEN, BISHOP, KNIGHT, ROOK };
 
-Color OppositeColor(Color color) {
-  return color == Color::WHITE ? Color::BLACK : Color::WHITE;
-}
+Color OppositeColor(Color color);
 
 struct Square {
   Square(int file, int rank) : file(file), rank(rank) {}
@@ -33,10 +31,6 @@ template <> struct std::hash<Square> {
   }
 };
 
-std::ostream& operator<<(std::ostream& stream, const Square& square) {
-  stream << static_cast<char>('a' + static_cast<char>(square.file))
-         << 1 + square.rank;
-  return stream;
-}
+std::ostream& operator<<(std::ostream& stream, const Square& square);
 
 #endif // ENGINE_BASE_H_

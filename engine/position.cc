@@ -135,6 +135,18 @@ void Position::MakeMove(const Square& from, const Square& to) {
   RemovePiece(from);
 }
 
+std::string Position::ToString() const {
+  std::string output;
+  for (int y = BOARD_SIZE - 1; y >= 0; --y) {
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+      output.push_back(HasPiece(Square{x, y}) ? GetPiece(Square{x, y}).ToChar()
+                                              : ' ');
+    }
+    output.push_back('\n');
+  }
+  return output;
+}
+
 Position StartingPosition() {
   Position position;
 

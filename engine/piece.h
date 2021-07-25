@@ -20,6 +20,9 @@ class Piece {
 
   bool operator!=(const Piece& rhs) const { return !(*this == rhs); }
 
+  // Represents a piece as a char, lowercase for black, uppercase for white.
+  char ToChar() const;
+
  private:
   enum ::Kind kind_;
   bool is_black_;
